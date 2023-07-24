@@ -1,0 +1,26 @@
+{
+  "name": "gpt-quest-validator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FabienHP/gpt-quest-validator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FabienHP/gpt-quest-validator/issues"
+  },
+  "homepage": "https://github.com/FabienHP/gpt-quest-validator#readme",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "nodemon": "^3.0.1",
+    "openai": "^3.3.0"
+  }
+}
