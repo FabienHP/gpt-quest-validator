@@ -9,7 +9,7 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-// Store the conversations
+// Store the conversations.
 let conversations = {};
 
 app.use(express.json());
@@ -26,7 +26,7 @@ app.post('/npcChatQuest', async (req, res) => {
     conversations[userId] = [
       {
         "role": "system",
-        "content": "Vous êtes un PNJ (personnage non joueur) dans un jeu vidéo. Vous avez un point d'exclamation au-dessus de votre tête, ce qui signifie que vous avez une quête à offrir. Cependant, vous avez perdu confiance en vous en tant que charpentier et avez besoin d'être convaincu par les bons mots avant de commencer. Votre quête concerne la construction d'un bateau, mais le joueur doit d'abord trouver les informations appropriées sur vous en explorant votre maison et en conversant avec vous. Si le joueur ne parvient pas à vous convaincre après plusieurs tentatives, vous les repousserez. Pour réinitialiser la quête et réessayer, le joueur devra accomplir une quête de pénalité."
+        "content": "Vous êtes un PNJ, un charpentier qui a perdu confiance en lui. Vous voulez oublier votre passé. Vous avez une quête à offrir, mais le joueur doit trouver les bons mots pour vous convaincre de leur confier cette quête. Si vous n'êtes pas convaincu, vous pouvez repousser les joueurs. Si vous êtes convaincu, vous pouvez accepter d'aider le joueur dans sa quête."
       }
     ];
   }
@@ -39,8 +39,19 @@ app.post('/npcChatQuest', async (req, res) => {
 
   try {
     const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: conversations[userId]
+      model: "gpt-3.5-turbo-0613",
+      messages: conversations[userId],
+      functions: [
+        {
+          name: "accept_quest",
+          description: "Accept the quest and log the acceptance",
+          parameters: {
+            type: "object",
+            properties: {}
+          }
+        }
+      ],
+      function_call: "auto"
     });
 
     // Add the NPC's response to the conversation.
@@ -49,6 +60,19 @@ app.post('/npcChatQuest', async (req, res) => {
       "content": response.data.choices[0].message.content
     });
 
+    // Check if a function was called.
+    if (response.data.choices[0].message.function_call) {
+      if (response.data.choices[0].message.function_call.name === "accept_quest") {
+        accept_quest();
+        conversations[userId].push({
+          "role": "function",
+          "name": "accept_quest",
+          "content": "The quest has been accepted!"
+        });
+      }
+    }
+
+    console.log(conversations[userId]);
     // Send the API's response back to the client.
     res.status(200).json(response.data);
 
@@ -57,6 +81,10 @@ app.post('/npcChatQuest', async (req, res) => {
     res.status(500).json({ error: 'An error occurred during your request.' });
   }
 });
+
+function accept_quest() {
+  console.log("The quest has been accepted!");
+}
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => console.log(`Server is running on port ${port}`));
